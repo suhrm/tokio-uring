@@ -2,6 +2,7 @@ use crate::{
     buf::{IoBuf, IoBufMut},
     driver::Socket,
 };
+use libc::socket;
 use socket2::SockAddr;
 use std::{io, net::SocketAddr};
 
@@ -89,6 +90,11 @@ impl UdpSocket {
     /// Creates a new UDP socket and attempt to bind it to the addr provided.
     pub async fn bind(socket_addr: SocketAddr) -> io::Result<UdpSocket> {
         let socket = Socket::bind(socket_addr, libc::SOCK_DGRAM)?;
+        Ok(UdpSocket { inner: socket })
+    }
+
+    pub async fn bind_todevice(device_name: &str) -> io::Result<UdpSocket> {
+        let socket = Socket::bind_(device_name, libc::SOCK_DGRAM)?;
         Ok(UdpSocket { inner: socket })
     }
 

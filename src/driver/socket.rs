@@ -1,3 +1,5 @@
+use socket2::Domain;
+
 use crate::{
     buf::{IoBuf, IoBufMut},
     driver::{Op, SharedFd},
@@ -96,6 +98,28 @@ impl Socket {
             get_domain(socket_addr).into(),
             socket_type.into(),
         )
+    }
+
+    pub(crate) fn bind_todevice(device_name: &str, socket_type: libc::c_int) -> io::Result<Socket> {
+        Self::bind_internal_todevice(device_name, Domain::IPV4, socket_type.into())
+    }
+    fn bind_internal_todevice(
+        device_name: &str,
+        domain: socket2::Domain,
+        socket_type: socket2::Type,
+    ) -> io::Result<Socket> {
+        let sys_listener = socket2::Socket::new(domain, socket_type, None)?;
+        sys_listener.bind_device(Some(device_name.as_bytes()))?;
+        sys_listener.set_reuse_port(true)?;
+        sys_listener.set_reuse_address(true)?;
+
+        // TODO: config for buffer sizes
+        // sys_listener.set_send_buffer_size(send_buf_size)?;
+        // sys_listener.set_recv_buffer_size(recv_buf_size)?;
+
+        let fd = SharedFd::new(sys_listener.into_raw_fd());
+
+        Ok(Self { fd })
     }
 
     pub(crate) fn bind_unix<P: AsRef<Path>>(
