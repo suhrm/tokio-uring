@@ -103,6 +103,12 @@ impl Socket {
     pub(crate) fn bind_todevice(device_name: &str, socket_type: libc::c_int) -> io::Result<Socket> {
         Self::bind_internal_todevice(device_name, Domain::IPV4, socket_type.into())
     }
+
+    pub(crate) fn from_raw_fd(fd: RawFd) -> io::Result<Socket> {
+        let fd = SharedFd::new(fd);
+        Ok(Self { fd })
+    }
+
     fn bind_internal_todevice(
         device_name: &str,
         domain: socket2::Domain,

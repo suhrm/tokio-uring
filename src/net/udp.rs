@@ -4,7 +4,11 @@ use crate::{
 };
 use libc::socket;
 use socket2::SockAddr;
-use std::{io, net::SocketAddr};
+use std::{
+    io,
+    net::SocketAddr,
+    os::unix::prelude::{AsFd, AsRawFd},
+};
 
 /// A UDP socket.
 ///
@@ -86,6 +90,15 @@ pub struct UdpSocket {
     pub(super) inner: Socket,
 }
 
+impl From<std::net::UdpSocket> for UdpSocket {
+    fn from(sock: std::net::UdpSocket) -> UdpSocket {
+        let socket = Socket::from_raw_fd(sock.as_raw_fd());
+        UdpSocket {
+            inner: socket.expect("Unable to create from std::net::UdpSocket"),
+        }
+    }
+}
+
 impl UdpSocket {
     /// Creates a new UDP socket and attempt to bind it to the addr provided.
     pub async fn bind(socket_addr: SocketAddr) -> io::Result<UdpSocket> {
@@ -94,7 +107,7 @@ impl UdpSocket {
     }
 
     pub async fn bind_todevice(device_name: &str) -> io::Result<UdpSocket> {
-        let socket = Socket::bind_(device_name, libc::SOCK_DGRAM)?;
+        let socket = Socket::bind_todevice(device_name, libc::SOCK_DGRAM)?;
         Ok(UdpSocket { inner: socket })
     }
 
