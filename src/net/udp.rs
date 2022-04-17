@@ -4,11 +4,8 @@ use crate::{
 };
 use libc::socket;
 use socket2::SockAddr;
-use std::{
-    io,
-    net::SocketAddr,
-    os::unix::prelude::{AsFd, AsRawFd},
-};
+use std::{future::ready, io, net::SocketAddr, os::unix::prelude::AsRawFd};
+use tokio::io::{AsyncRead, AsyncWrite};
 
 /// A UDP socket.
 ///
@@ -148,5 +145,46 @@ impl UdpSocket {
     /// quantity of data written.
     pub async fn write<T: IoBuf>(&self, buf: T) -> crate::BufResult<usize, T> {
         self.inner.write(buf).await
+    }
+}
+
+impl AsyncRead for UdpSocket {
+    fn poll_read(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        buf: &mut tokio::io::ReadBuf<'_>,
+    ) -> std::task::Poll<io::Result<()>> {
+        loop {
+            todo!();
+        }
+    }
+}
+
+impl AsyncWrite for UdpSocket {
+    fn poll_write(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        buf: &[u8],
+    ) -> std::task::Poll<Result<usize, io::Error>> {
+        todo!();
+    }
+    fn poll_flush(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), io::Error>> {
+        todo!();
+    }
+    fn poll_shutdown(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> std::task::Poll<Result<(), io::Error>> {
+        todo!();
+    }
+    fn poll_write_vectored(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+        bufs: &[io::IoSlice<'_>],
+    ) -> std::task::Poll<Result<usize, io::Error>> {
+        todo!();
     }
 }
